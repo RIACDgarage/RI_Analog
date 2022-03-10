@@ -60,7 +60,10 @@ Let’s address two questions at this point. First question is, this problem cer
 ## Resource
 
 1. Spice model of TSMC 180nm: https://github.com/DDD-FIT-CTU/CMOS-SPICE-Model-Collections.git
+
 Clone to the local directory, and execute the provided shell script:
+
     bash extractModels.sh MOSIS_waferTestData_TSMC_180nm TSMC180nm
+
 This will give you the model file `tsmc018.m`, with two MOS `nfet` and `pfet`.
 
