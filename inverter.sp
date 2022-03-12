@@ -10,7 +10,9 @@ inverter design example
 
 *** circuit
 vsupply vdd 0 vdd
-vpulse in 0 dc 0 pulse(0 vdd 1n 200p 200p 4.8n 10n)
+vpulse inpre 0 dc 0 pulse(0 vdd 1n 200p 200p 4.8n 10n)
+m2 in inpre 0 0 nfet w='w0/3' l=180n
+m3 in inpre vdd vdd pfet w='w1/3' l=180n
 m0 outn in 0 0 nfet w=w0 l=180n
 m1 outp in vdd vdd pfet w=w1 l=180n
 c0 out 0 100f
@@ -23,9 +25,9 @@ vp outp out 0
 
 *** measurement and data
 *.plot i(vsupply) i(c0) i(vn) i(vp)
-.meas tran falltime TRIG v(out) VAL='vdd*0.9' FALL=last TD=10n 
+.meas tran falltime TRIG v(out) VAL='vdd*0.9' FALL=last TD=15n 
 +                   TARG v(out) VAL='vdd*0.1' FALL=last
-.meas tran risetime TRIG v(out) VAL='vdd*0.1' RISE=last TD=15n 
+.meas tran risetime TRIG v(out) VAL='vdd*0.1' RISE=last TD=10n 
 +                   TARG v(out) VAL='vdd*0.9' RISE=last
 .meas tran worstTime param='(risetime > falltime) ? risetime:falltime'
 .meas tran tDiffPercent param='abs(risetime-falltime)/worsttime*100'

@@ -12,34 +12,26 @@ Reward will be parsed from SPICE output file of "spiceout.txt".
 """
 import subprocess
 import numpy as np
+from getAction import getAction
+from act2design import act2design
+from getReward import getReward
+from spiceIF import spiceIF
 
 # define action to be performed
-action0 = 1e-5
-action1 = 2e-5
-action = np.array((action0,action1))
+d0 = np.array((50,100),dtype=np.int32) # initial guess
+e0 = spiceIF("action.txt", "inverter.sp", "spiceout.txt") # spice interface
+merit0 = e0.runSpice(d0)
 
-paramFile = "action.txt"
-actionFile = open(paramFile, "w")
-actionFile.writelines([".param"," w0=",str(action[0])," w1=",str(action[1]),\
-                       "\n"])
-actionFile.close()
+for episode in range (10):
+    action = getAction().newAction()
+    design = act2design(action, d0).newDesign()
+    merit1 = e0.runSpice(design)
+    reward = getReward(merit0, merit1).newReward()
+    # update t-1 state
+    merit0 = merit1
+    d0 = design
 
-# interact with environment, the SPICE simulator
-spiceFile = "inverter.sp"
-spiceOutput = "spiceout.txt"
-subprocess.run(["ngspice", "-b", "-o", spiceOutput, spiceFile])
-
-# read the reward from environment output
-rewardRawFile = open(spiceOutput, "rt")
-rewardString1 = "tdiffpercent"
-rewardString2 = "speedperpower"
-for line in rewardRawFile:
-    if rewardString1 in line:
-        rtemp = line.split("=")
-        reward0 = float(rtemp[1].strip())
-        print("reward0=", reward0, ", reward0 must smaller than 3")
-    elif rewardString2 in line:
-        rtemp = line.split("=")
-        reward1 = float(rtemp[1].strip())
-        print("reward1=",reward1, ", reward1 larger the better")
-rewardRawFile.close()
+    print("action=", action)
+    subprocess.run(["cat", "action.txt"])
+    print("merid=", merit0)
+    print("reward=", reward)
