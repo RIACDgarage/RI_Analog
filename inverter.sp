@@ -27,15 +27,17 @@ vp outp out 0
 *.plot i(vsupply) i(c0) i(vn) i(vp)
 .meas tran falltime TRIG v(out) VAL='vdd*0.9' FALL=last TD=15n 
 +                   TARG v(out) VAL='vdd*0.1' FALL=last
+.meas tran absfall param='abs(falltime)'
 .meas tran risetime TRIG v(out) VAL='vdd*0.1' RISE=last TD=10n 
 +                   TARG v(out) VAL='vdd*0.9' RISE=last
-.meas tran worstTime param='(risetime > falltime) ? risetime:falltime'
-.meas tran tDiffPercent param='abs(risetime-falltime)/worsttime*100'
+.meas tran absrise param='abs(risetime)'
+.meas tran worsttime param='(absrise > absfall) ? absrise : absfall'
+.meas tran tDiffPercent param='abs(absrise - absfall) / worsttime * 100'
 *.meas tran IdotT INTEG i(vsupply) FROM=0ns TO=20ns
 .meas tran iavg AVG i(vsupply)
 *.meas tran power2 param='IdotT/20n*vdd'
 .meas tran power param='abs(iavg)*vdd'
-.meas tran speedPerPower param='worstTime/power'
+.meas tran speedPerPower param='worstTime/power*1e6'
 
 
 .tran 10p 20n
