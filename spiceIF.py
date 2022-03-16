@@ -50,20 +50,20 @@ class spiceIF:
                 if self.meritString1 in line:
                     rtemp = line.split("=")
                     s0 = rtemp[1].strip()
-                    if s0 == 'failed':
-                        self.m0 = 100.0
-                    else:
-                        self.m0 = float(s0)
-                    # m0 range from 0 to 100. Target is to have m0 <= 3
                 elif self.meritString2 in line:
                     rtemp = line.split("=")
-                    s0 = rtemp[1].strip()
-                    if s0 == 'failed':
-                        self.m1 = 0
-                    else:
-                        self.m1 = float(s0)
-                    # Target is to have m1 as large as possible
+                    s1 = rtemp[1].strip()
             meritRawFile.close()
+
+            if s0 == 'failed':
+                self.m0 = 100.0
+                self.m1 = 0.0
+            elif s1 == 'failed':
+                self.m0 = float(s0)
+                self.m1 = 0.0
+            else:
+                self.m0 = float(s0)
+                self.m1 = float(s1)
             #--- end of spice operation
 
             # save new spice run to history file
