@@ -4,28 +4,32 @@
 """
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+#from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
 #import tensorflow as tf
 
 class normSpice:
-    def __init__(self, spiceDataFile, evalRatio, dmax):
+    def __init__(self, spiceDataFile, evalRatio, d1max, d2max):
         self.spData = spiceDataFile
         self.evalRatio = evalRatio
-        self.scaler = MinMaxScaler()
-        # limit largest design, original is 1000
-        self.dmax = dmax
+        #self.scaler = MinMaxScaler()
+        # limit largest design
+        self.d1max = d1max
+        self.d2max = d2max
 
     def runNorm(self):
         df = pd.read_csv(self.spData)
-        spiceHist = df.loc[(df['design1'] <= self.dmax) & 
-                           (df['design2'] <= self.dmax)]
+        spiceHist = df.loc[(df['design1'] <= self.d1max) & 
+                           (df['design2'] <= self.d2max)]
         input = np.array(spiceHist[['design1', 'design2']],dtype=np.float32)
-        result = np.array(spiceHist[['merit1']],dtype=np.float32)
+        result = np.array(spiceHist[['merit1', 'merit2']],dtype=np.float32)
         # normalize input in log scale, property of MOS size
-        input = np.log(input)/np.log(self.dmax)
-        self.scaler.fit(result)
-        result = self.scaler.transform(result)
+        input[:,0] = np.log(input[:,0])/np.log(self.d1max)
+        input[:,1] = np.log(input[:,1])/np.log(self.d2max)
+        #self.scaler.fit(result)
+        #result = self.scaler.transform(result)
+        result[:,0] = result[:,0]/100.0
+        result[:,1] = result[:,1]/100.0
         input, result = shuffle(input, result)
         
         # separate data for training and evaluation
@@ -40,8 +44,8 @@ class normSpice:
 
         return (i_train, r_train, i_eval, r_eval)
 
-    def revNorm(self, result):
-        return self.scaler.reverse_transform(result)
+    #def revNorm(self, result):
+        #return self.scaler.reverse_transform(result)
 """
 spiceDataFile = "spiceHist.csv"
 d0 = normSpice(spiceDataFile, 5, 200).runNorm()

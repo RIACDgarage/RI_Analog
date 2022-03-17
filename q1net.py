@@ -15,7 +15,7 @@ q1net.add(tf.keras.layers.Dense(1))
 #lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
 #    initial_learning_rate=1e-2, decay_steps=100, decay_rate=0.9)
 lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-    initial_learning_rate=1e-3, decay_steps=10000, decay_rate=0.95,
+    initial_learning_rate=1e-2, decay_steps=5000, decay_rate=0.95,
     staircase=True)
 opt = tf.keras.optimizers.SGD(learning_rate=lr_schedule)
 q1net.compile(optimizer = opt, loss = 'mse')
@@ -26,8 +26,8 @@ d1max = 300 # limit training within certain size
 d2max = 1000
 d0 = normSpice(spiceData, eval_ratio, d1max, d2max).runNorm()
 
-h0 = q1net.fit( [d0[0]], [d0[1]], epochs = 2000, batch_size = 512,
-                   validation_data = ([d0[2]], [d0[3]]) )
+h0 = q1net.fit( [d0[0]], [d0[1][:,0]], epochs = 2000, batch_size = 1024,
+                   validation_data = ([d0[2]], [d0[3][:,0]]) )
 
 plt.figure() # new plot for every episode
 #plt.ylim([0.0, 0.4])
