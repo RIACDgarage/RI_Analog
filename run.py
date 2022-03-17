@@ -12,26 +12,39 @@ Reward will be parsed from SPICE output file of "spiceout.txt".
 """
 import subprocess
 import numpy as np
-from getAction import getAction
-from act2design import act2design
+from getAction2 import getAction
 from getReward import getReward
 from spiceIF import spiceIF
 
-# define action to be performed
-d0 = np.array((50,100),dtype=np.int32) # initial guess
-e0 = spiceIF("action.txt", "inverter.sp", "spiceout.txt") # spice interface
-merit0 = e0.runSpice(d0)
+# action variables
+N = 5 # range of exploit
+eps = 0.2 # epsilon greedy, 0 is most greedy
 
-for episode in range (10):
-    action = getAction().newAction()
-    design = act2design(action, d0).newDesign()
-    merit1 = e0.runSpice(design)
-    reward = getReward(merit0, merit1).newReward()
+# design range
+dmin = 3
+d1max = 300
+d2max = 1000
+
+# initial run
+#d0 = [100, 20] # initial guess
+d0 = [np.random.randint(low=dmin, high=d1max),
+      np.random.randint(low=dmin, high=d2max)]
+e0 = spiceIF("action.txt", "inverter.sp", "spiceout.txt") # spice interface
+a0 = getAction(N, eps, dmin, d1max, d2max)
+merit_tm1 = e0.runSpice(d0) # merit of t-1
+
+for episode in range (100):
+    design = a0.newAction(d0)
+    merit_t = e0.runSpice(design) # merit at t
+    reward = getReward(merit_tm1, merit_t).newReward()
     # update t-1 state
-    merit0 = merit1
+    merit_tm1 = merit_t
     d0 = design
 
-    print("action=", action)
-    subprocess.run(["cat", "action.txt"])
-    print("merid=", merit0)
+    print("design=", design)
+    print("merit=", merit_t)
     print("reward=", reward)
+
+    if merit_t[0] <= 3:
+        print("Design target reached, existing")
+        break
