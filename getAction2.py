@@ -10,6 +10,7 @@
 import numpy as np
 import tensorflow as tf
 import pandas as pd
+from getReward import getReward
 
 class getAction:
     def __init__(self, N, eps, dmin, d1max, d2max):
@@ -21,19 +22,65 @@ class getAction:
         self.dmin = dmin # minimun size to be taken, was 3
         self.d1max = d1max # maximun size for design1
         self.d2max = d2max # maximum size for design2
+        self.r0 = getReward(0.0) # initial 0.0 can be ignored, care value only
+        self.greedyFlag = True
 
     def newAction(self, oldDesign):
-
+        # 2 cases for random walk: 1st random < eps, 2nd value seems flat
         if self.rng.random() < self.eps: # let's explore
-            print("explore")
+            self.greedyFlag = False
+        else:
+            self.greedyFlag = True
+
+        if self.greedyFlag == True: # let's use argmax from Q function
+            # explore 5 steps from oldDesign
+            explr = pd.DataFrame([oldDesign],columns=['design1','design2'])
+            for i in (-1, 0, 1):
+                for j in (-1, 0, 1):
+                    if (i != 0 or j != 0):
+                        for k in range (self.N):
+                            d0 = oldDesign + np.multiply([i,j], (k+1))
+                            df0 = pd.DataFrame([d0],columns=['design1',
+                                                             'design2'])
+                            explr = pd.concat([explr, df0], ignore_index=True)
+            # clean up the potential exceptions
+            explr = explr.loc[(explr['design1'] <= self.d1max) &
+                              (explr['design2'] <= self.d2max) ]
+            explr = explr.loc[(explr['design1'] >= self.dmin) &
+                              (explr['design2'] >= self.dmin) ]
+            # checking their Q value
+            # normalize input first, check scale agree with NN
+            input = explr.to_numpy(dtype=np.float32)
+            input[:,0] = np.log(input[:,0])/np.log(self.d1max)
+            input[:,1] = np.log(input[:,1])/np.log(self.d2max)
+            # get prediction from NN
+            pred1 = self.q1net.predict(input) * 100
+            pred2 = self.q2net.predict(input) * 100
+            # calculate reward function
+            ilen = len(pred1)
+            value = np.zeros(ilen)
+            for i in range (ilen):
+                rtemp, vtemp = self.r0.newReward((pred1[i], pred2[i]))
+                value[i] = vtemp
+            imax = np.argmax(value)
+            if imax == 0:
+                print("local minimum or flat, do random walk")
+                self.greedyFlag = False
+            else:
+                e0 = explr.to_numpy()
+                print("new maximum=", value[imax])
+                print("at design ", e0[imax])
+                return (e0[imax], self.greedyFlag)
+
+        if self.greedyFlag == False: # let's do random walk
             rints = self.rng.integers(low=-1, high=2, size=2)
             while np.all(rints == 0): # to avoid [0,0] case
                 rints = self.rng.integers(low=-1, high=2, size=2)
-            aRound = np.divide(oldDesign, 10) 
-            if aRound[0] < 1: #if smaller than 1, do 1
-                aRound[0] = 1
-            if aRound[1] < 1:
-                aRound[1] = 1
+            aRound = np.divide(oldDesign, 5) 
+            if aRound[0] < 10: #if smaller than 10, do 10
+                aRound[0] = 10
+            if aRound[1] < 10:
+                aRound[1] = 10
             aRound = aRound.astype(int)
             newDsn = aRound * rints + oldDesign
             # control newDsn with 3 to 1000
@@ -45,44 +92,7 @@ class getAction:
                 newDsn = newDsn * (~lt1k) + 1000 * lt1k
             if newDsn[0] > 300:
                 newDsn[0] = 300
-            return newDsn
-
-        else: # let's use argmax from Q function
-
-            # explore 5 steps from oldDesign
-            explr = pd.DataFrame([oldDesign],columns=['design1','design2'])
-            for i in (-1, 0, 1):
-                for j in (-1, 0, 1):
-                    if (i != 0 or j != 0):
-                        for k in range (self.N):
-                            d0 = oldDesign + np.multiply([i,j], (k+1))
-                            df0 = pd.DataFrame([d0],columns=['design1',
-                                                             'design2'])
-                            explr = pd.concat([explr, df0], ignore_index=True)
-
-            # clean up the potential exceptions
-            explr = explr.loc[(explr['design1'] <= self.d1max) &
-                              (explr['design2'] <= self.d2max) ]
-            explr = explr.loc[(explr['design1'] >= self.dmin) &
-                              (explr['design2'] >= self.dmin) ]
-
-            # checking their Q value
-            # normalize input in log scale, property of MOS size
-            input = explr.to_numpy(dtype=np.float32)
-            input[:,0] = np.log(input[:,0])/np.log(self.d1max)
-            input[:,1] = np.log(input[:,1])/np.log(self.d2max)
-
-            pred1 = self.q1net.predict(input) * 100
-            imin = np.argmin(pred1)
-            e0 = explr.to_numpy()
-            if imin == 0:
-                print("local minimum arrived, wrap to the other side of universe")
-                return [self.rng.integers(low=self.dmin, high=self.d1max),
-                        self.rng.integers(low=self.dmin, high=self.d2max)]
-            else:
-                print("new minimum=", pred1[imin])
-                print("at design ", e0[imin])
-                return e0[imin]
+            return (newDsn, self.greedyFlag)
 
 """
 a0 = getAction(5, 0.2, 3, 300, 1000)

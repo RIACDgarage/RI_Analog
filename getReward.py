@@ -1,22 +1,24 @@
+"""
+ Reward function
+ calculate reward based on merit values from Spice
+"""
 import numpy as np
+
 class getReward:
-    def __init__(self, oldR, newR):
-        self.oldR = oldR
-        self.newR = newR
+    def __init__(self, oldValue):
+        self.oldValue = oldValue # could be initialized from zero
+        self.slope1 = 5.0
+        self.slope2 = 1.0/3.0
+        self.cutoff = 3.0 # accept value for merit1 (smaller)
 
-    def newReward(self):
-        if self.newR[0] <= 3: # note newR[0] and oldR[0] are between 0~100
-            tdR = 1000
-        elif self.oldR[0] > self.newR[0]:
-            tdR = self.oldR[0] - self.newR[0]
-        else: # unfavour direction to be punished
-            tdR = (self.oldR[0] - self.newR[0])*10
-
-        spR = (self.newR[1] - self.oldR[1]) * 1e7
+    def newReward(self, merit):
+        if merit[0] <= self.cutoff:
+            value = merit[0]*(-self.slope2) + (self.slope2*self.cutoff-1)
+        else:
+            value = merit[0]*(-self.slope1) + (self.slope1*self.cutoff-1) 
+        value = value + merit[1]
+        reward = value - self.oldValue
+        self.oldValue = value
         
-        return (tdR, spR)
-
-"""
-r0 = getReward([10.0, 1e-6], [12.0, 10e-6])
-print(r0)
-"""
+        return [reward, value]
+        # reward for the action policy. value for Q function
