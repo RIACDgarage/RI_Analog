@@ -18,11 +18,13 @@ class spiceIF:
         self.meritString2 = "speedperpower"
         self.m0 = 0.0
         self.m1 = 0.0
+        self.s0 = 'failed'
+        self.s1 = 'failed'
         self.runSpiceFlag = True
 
     def runSpice(self, design): # design link to action, merit to reward
         # Read history data of spice run. If the state match, grab result
-        spiceHist = pd.read_csv(r'spiceHist.csv')
+        spiceHist = pd.read_csv('spiceHist.csv')
         d0 = spiceHist.query('(design1==@design[0]) & (design2==@design[1])')
         if d0.empty:
             print("design not find in History, will do spice simulation")
@@ -49,21 +51,21 @@ class spiceIF:
             for line in meritRawFile:
                 if self.meritString1 in line:
                     rtemp = line.split("=")
-                    s0 = rtemp[1].strip()
+                    self.s0 = rtemp[1].strip()
                 elif self.meritString2 in line:
                     rtemp = line.split("=")
-                    s1 = rtemp[1].strip()
+                    self.s1 = rtemp[1].strip()
             meritRawFile.close()
 
-            if s0 == 'failed':
+            if self.s0 == 'failed':
                 self.m0 = 100.0
                 self.m1 = 0.0
-            elif s1 == 'failed':
-                self.m0 = float(s0)
+            elif self.s1 == 'failed':
+                self.m0 = float(self.s0)
                 self.m1 = 0.0
             else:
-                self.m0 = float(s0)
-                self.m1 = float(s1)
+                self.m0 = float(self.s0)
+                self.m1 = float(self.s1)
             #--- end of spice operation
 
             # save new spice run to history file

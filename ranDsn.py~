@@ -1,0 +1,9 @@
+"""
+ a random design with right log distribution
+"""
+import numpy as np
+
+def ranDsn(dmin, d1max, d2max):
+    d0 = int(np.random.rand()*(d1max - dmin) + dmin)
+    d1 = int(np.random.rand()*(d2max - dmin) + dmin)
+    return [d0, d1]

@@ -11,6 +11,7 @@ import numpy as np
 import tensorflow as tf
 import pandas as pd
 from getReward import getReward
+from ranDsn import ranDsn
 
 class getAction:
     def __init__(self, N, eps, dmin, d1max, d2max):
@@ -73,6 +74,7 @@ class getAction:
                 return (e0[imax], self.greedyFlag)
 
         if self.greedyFlag == False: # let's do random walk
+            """
             rints = self.rng.integers(low=-1, high=2, size=2)
             while np.all(rints == 0): # to avoid [0,0] case
                 rints = self.rng.integers(low=-1, high=2, size=2)
@@ -83,15 +85,16 @@ class getAction:
                 aRound[1] = 10
             aRound = aRound.astype(int)
             newDsn = aRound * rints + oldDesign
-            # control newDsn with 3 to 1000
-            st3 = newDsn < 3
-            lt1k = newDsn > 1000
+            # control newDsn within dmin and d?max
+            st3 = newDsn < self.dmin
             if np.any(st3):
                 newDsn = newDsn * (~st3) + 3 * st3
-            if np.any(lt1k):
-                newDsn = newDsn * (~lt1k) + 1000 * lt1k
-            if newDsn[0] > 300:
-                newDsn[0] = 300
+            if newDsn[0] > self.d1max: newDsn[0] = self.d1max
+            if newDsn[1] > self.d2max: newDsn[1] = self.d2max
+            """
+            # let's just wrap to another universe
+            newDsn = ranDsn(self.dmin, self.d1max, self.d2max)
+
             return (newDsn, self.greedyFlag)
 
 """

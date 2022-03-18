@@ -13,10 +13,10 @@ class getReward:
 
     def newReward(self, merit):
         if merit[0] <= self.cutoff:
-            value = merit[0]*(-self.slope2) + (self.slope2*self.cutoff-1)
+            #value = merit[0]*(-self.slope2) + (self.slope2*self.cutoff-1)
+            value = merit[1]*5
         else:
-            value = merit[0]*(-self.slope1) + (self.slope1*self.cutoff-1) 
-        value = value + merit[1]
+            value = merit[0]*(-self.slope1) + (self.slope1*self.cutoff) 
         reward = value - self.oldValue
         self.oldValue = value
         
