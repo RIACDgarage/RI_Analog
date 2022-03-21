@@ -38,4 +38,4 @@ class vpnet:
         d0 = normSpice(spiceData, eval_ratio, d1max, d2max).runNorm()
         h0 = self.vpnet.fit( [d0[0]], [d0[1][:,0]], epochs = 10000, 
                 batch_size = 1024, validation_data = ([d0[2]], [d0[3][:,0]]) )
-        vpnet.save(self.vpmodeldir)
+        self.vpnet.save(self.vpmodeldir)
