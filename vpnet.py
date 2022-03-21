@@ -44,7 +44,7 @@ class vpnet:
         lenv = len(d0[3])
         vval = np.zeros(lenv)
         for i in range (lenv): dummy, vval[i] = self.r0.newReward(d0[3][i,:])
-        h0 = self.vpnet.fit( [d0[0]], [value], epochs = 1000, 
+        h0 = self.vpnet.fit( [d0[0]], [value], epochs = 100, 
                              batch_size = 1024, validation_data = 
                              ([d0[2]], [vval]) )
         self.vpnet.save(self.vpmodeldir)
