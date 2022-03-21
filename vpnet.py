@@ -8,12 +8,13 @@ import pandas as pd
 #import matplotlib.pyplot as plt
 from normSpice import normSpice
 import pathlib
+from getReward import getReward
 
 class vpnet:
     def __init__(self, vpmodeldir):
         self.vpmodeldir = vpmodeldir
-        if pathlib.Path(vpmodeldir).is_dir(): # model found, use it
-            self.vpnet = tf.keras.models.load_model(vpnet_model)
+        if pathlib.Path(self.vpmodeldir).is_dir(): # model found, use it
+            self.vpnet = tf.keras.models.load_model(self.vpmodeldir)
         else:
             self.vpnet = tf.keras.models.Sequential()
             self.vpnet.add(tf.keras.layers.Dense(32, activation='relu', 
@@ -28,6 +29,7 @@ class vpnet:
                 staircase=True)
             opt = tf.keras.optimizers.SGD(learning_rate=lr_schedule)
             self.vpnet.compile(optimizer = opt, loss = 'mse')
+        self.r0 = getReward(0.0)
 
     def vpIterate(self):
         # still store updated value in spiceHist, to be revised latter
@@ -36,6 +38,13 @@ class vpnet:
         d1max = 300 # limit training within certain size
         d2max = 1000
         d0 = normSpice(spiceData, eval_ratio, d1max, d2max).runNorm()
-        h0 = self.vpnet.fit( [d0[0]], [d0[1][:,0]], epochs = 10000, 
-                batch_size = 1024, validation_data = ([d0[2]], [d0[3][:,0]]) )
+        lent = len(d0[1])
+        value = np.zeros(lent)
+        for i in range (lent): dummy, value[i] = self.r0.newReward(d0[1][i,:])
+        lenv = len(d0[3])
+        vval = np.zeros(lenv)
+        for i in range (lenv): dummy, vval[i] = self.r0.newReward(d0[3][i,:])
+        h0 = self.vpnet.fit( [d0[0]], [value], epochs = 1000, 
+                             batch_size = 1024, validation_data = 
+                             ([d0[2]], [vval]) )
         self.vpnet.save(self.vpmodeldir)

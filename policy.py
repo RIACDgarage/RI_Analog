@@ -57,7 +57,7 @@ class policy:
             # do policy value function iteration, new value passed in runSpice
             self.vp.vpIterate()
             # greedy action
-            approx_value = self.vp.predict(st1)
+            approx_value = self.vp.vpnet.predict(st1)
             imax = np.argmax(approx_value)
             return st1[imax]
 
