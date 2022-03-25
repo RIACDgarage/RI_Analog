@@ -14,8 +14,12 @@ class optstv:
             self.optstv = pd.read_csv(optstvFile)
         else:
             self.optstv = pd.DataFrame(columns=['state0','state1',
-                                                   'reward'])
-            self.optstv.to_csv(self.optstvFile)
+                                                'reward'])
+            self.optstv.to_csv(self.optstvFile, index=False)
+        # note optstv.optstv is a DataFrame
+
+    def lenStv(self):
+        return len(self.optstv)
 
     def writeStv(self, state, reward):
         dfno = self.optstv.query('(state0==@state[0]) & (state1==@state[1])')
@@ -32,10 +36,14 @@ class optstv:
     def readStv(self, state):
         dfno = self.optstv.query('(state0==@state[0]) & (state1==@state[1])')
         if dfno.empty:
-            foundFlag = False
+            doSpiceFlag = True
             r0 = 0.0
         else:
-            foundFlag = True
+            doSpiceFlag = False
             r0 = dfno.to_numpy().flatten()[2]
-        return r0, foundFlag        
+        return r0, doSpiceFlag        
     
+    def readNP(self):
+        state = np.array(self.optstv[['state0', 'state1']])
+        reslt = np.array(self.optstv[['reward']])
+        return state, result

@@ -11,8 +11,8 @@ inverter design example
 *** circuit
 vsupply vdd 0 vdd
 vpulse inpre 0 dc 0 pulse(0 vdd 1n 200p 200p 4.8n 10n)
-m2 in inpre 0 0 nfet w='w0/3' l=180n
-m3 in inpre vdd vdd pfet w='w1/3' l=180n
+m2 in inpre 0 0 nfet w='(w0+w1)/3' l=180n
+m3 in inpre vdd vdd pfet w='(w0+w1)/3*2' l=180n
 m0 outn in 0 0 nfet w=w0 l=180n
 m1 outp in vdd vdd pfet w=w1 l=180n
 c0 out 0 100f
