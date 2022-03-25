@@ -25,7 +25,7 @@ vpModelFile = "vpmodel.pth"
 if pathlib.Path(vpModelFile).is_file():
     vp.load_state_dict(torch.load(vpModelFile))
 opt0 = optstv("optstv.csv") # prepare the optimal state value function
-st0 = [50, 50] # or st0 = util.ranDsn(), for initial state
+st0 = util.ranDsn(dmin, d1max, d2max) # or st0 = [20,20], for initial state
 e0 = spiceIF("action.txt", "inverter.sp", "spiceout.txt", opt0)
 if opt0.lenStv() < 100: util.stvInit("mesh", dmin, d1max, d2max, opt0, e0)
 r0 = util.calcReward() # initial reward function
@@ -65,8 +65,9 @@ for i in range (episode):
 
     # define MDP termination criterion
     if isinstance(reward, list): reward = reward[0]
+    if isinstance(bestDesign[1], list): bestDesign[1] = bestDesign[1][0]
     if reward > bestDesign[1]: bestDesign = [st1, reward]
-    if reward > 90:
+    if reward > 80:
         print("Design target reached, existing")
         break
     elif i == episode-1:
