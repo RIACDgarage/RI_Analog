@@ -1,2 +1,0 @@
-Error: Could not find include file tsmc018.m
-Note: No ".plot", ".print", or ".fourier" lines; no simulations run
